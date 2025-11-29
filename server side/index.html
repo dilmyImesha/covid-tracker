@@ -1,0 +1,40 @@
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+
+import recordsRouter from "./routes/records.js";
+
+dotenv.config();
+const app = express();
+
+// -------------------
+// SECURITY MIDDLEWARE
+// -------------------
+app.use(helmet());
+app.use(cors({ origin: "*" }));
+app.use(express.json());
+
+// Rate limit: 100 requests / 15 min
+app.use(rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100
+}));
+
+// -------------------
+// DATABASE CONNECTION
+// -------------------
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("MongoDB Connected"))
+    .catch((err) => console.error("DB Error:", err));
+
+// -------------------
+// ROUTES
+// -------------------
+app.use("/api/records", recordsRouter);
+
+// -------------------
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
